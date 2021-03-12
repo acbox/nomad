@@ -95,7 +95,7 @@ func (c *cniNetworkConfigurator) Setup(ctx context.Context, alloc *structs.Alloc
 	var res *cni.CNIResult
 	for attempt := 1; ; attempt++ {
 		var err error
-		if res, err = c.cni.Setup(ctx, alloc.ID, spec.Path, cni.WithCapabilityPortMap(getPortMapping(alloc, c.ignorePortMappingHostIP))); err != nil {
+		if res, err = c.cni.Setup(ctx, alloc.ID, spec.Path, cni.WithLabels(getTaskGroupMeta(alloc)), cni.WithCapabilityPortMap(getPortMapping(alloc, c.ignorePortMappingHostIP))); err != nil {
 			c.logger.Warn("failed to configure network", "err", err, "attempt", attempt)
 			switch attempt {
 			case 1:
@@ -196,6 +196,16 @@ func (c *cniNetworkConfigurator) ensureCNIInitialized() error {
 	} else {
 		return err
 	}
+}
+
+// getTaskGroupMeta returns metadata from task group associated with supplied allocation
+func getTaskGroupMeta(alloc *structs.Allocation) (map[string]string) {
+	for _, tg := range alloc.Job.TaskGroups {
+		if tg.Name == alloc.TaskGroup {
+			return tg.Meta
+		}
+	}
+	return make(map[string]string)
 }
 
 // getPortMapping builds a list of portMapping structs that are used as the
