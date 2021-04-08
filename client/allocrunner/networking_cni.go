@@ -115,11 +115,11 @@ func (c *cniNetworkConfigurator) Setup(ctx context.Context, alloc *structs.Alloc
 
 	if len(res.Interfaces) > 0 {
 		// find an interface with Sandbox set, or any one of them if no
-		// interface has it set
+		// interface has it set (prefer interface with IP address set)
 		var iface *cni.Config
 		var name string
 		for name, iface = range res.Interfaces {
-			if iface != nil && iface.Sandbox != "" {
+			if iface != nil && (iface.Sandbox != "" || len(iface.IPConfigs) > 0) {
 				break
 			}
 		}
